@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.uas_android.database.Movies
 import com.example.uas_android.databinding.FragmentHomeBinding
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -31,11 +32,9 @@ class HomeFragment : Fragment() {
     private val firestore = FirebaseFirestore.getInstance()
     private val movieCollection = firestore.collection("movie")
     private var updateId = ""
-    private val movieListLiveData: MutableLiveData<List<Movie>> by lazy {
-        MutableLiveData<List<Movie>>()
+    private val movieListLiveData: MutableLiveData<List<Movies>> by lazy {
+        MutableLiveData<List<Movies>>()
     }
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var movieAdapter: MoviesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,19 +58,6 @@ class HomeFragment : Fragment() {
             // Menampilkan username di tkshome2
             tkshome2.text = username
         }
-        recyclerView = binding.recyclerViewpublic
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        movieAdapter = MoviesAdapter { item ->
-
-            val intentTodetailActivity = Intent(requireContext(), detailActivity::class.java)
-            intentTodetailActivity.putExtra("UPDATE_ID", updateId)
-            intentTodetailActivity.putExtra("TITLE", item.title)
-            intentTodetailActivity.putExtra("DESCRIPTION", item.Description)
-            intentTodetailActivity.putExtra("IMAGE", item.image)
-
-            startActivity(intentTodetailActivity)
-        }
-        recyclerView.adapter = movieAdapter
 
         getAllMovie()
         observeMovie()
@@ -84,7 +70,9 @@ class HomeFragment : Fragment() {
 
     private fun observeMovie(){
         movieListLiveData.observe(viewLifecycleOwner) { movies ->
-            movieAdapter.submitList(movies)
+            val adapter = MoviesAdapter(movies)
+            binding.recyclerViewpublic.adapter = adapter
+            binding.recyclerViewpublic.layoutManager = LinearLayoutManager(requireContext())
         }
     }
     private fun observeMovieChanges(){
@@ -93,7 +81,7 @@ class HomeFragment : Fragment() {
                 Log.d("HomeFragment", "Error listening for budget changes: ", error)
                 return@addSnapshotListener
             }
-            val movie = snapshot?.toObjects(Movie::class.java)
+            val movie = snapshot?.toObjects(Movies::class.java)
             if (movie != null){
                 movieListLiveData.postValue(movie)
             }

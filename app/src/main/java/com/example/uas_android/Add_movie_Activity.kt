@@ -9,10 +9,14 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.MutableLiveData
+import com.example.uas_android.database.MoviesDao
+import com.example.uas_android.database.MoviesRoomDatabase
 import com.example.uas_android.databinding.ActivityAddMovieBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class Add_movie_Activity : AppCompatActivity() {
     private lateinit var binding: ActivityAddMovieBinding
@@ -21,16 +25,25 @@ class Add_movie_Activity : AppCompatActivity() {
     private val movieListLiveData: MutableLiveData<List<Movie>> by lazy {
         MutableLiveData<List<Movie>>()
     }
+    private lateinit var moviedb: MoviesRoomDatabase
+    private lateinit var executorService: ExecutorService
+
     private lateinit var storageRef : StorageReference
     private var imageURI : Uri? = null
     private lateinit var image : String
+    private lateinit var mdao: MoviesDao
     private  var imagecurent: Uri? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityAddMovieBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
         storageRef = FirebaseStorage.getInstance().reference.child("images")
         inputimage()
+
+        moviedb = MoviesRoomDatabase.getInstance(applicationContext, NetworkMonitor(applicationContext))
+        executorService = Executors.newSingleThreadExecutor()
+        mdao = moviedb.moviesDao()
 
         with(binding) {
             btnnn.setOnClickListener {
@@ -90,4 +103,5 @@ class Add_movie_Activity : AppCompatActivity() {
         }
 
     }
+
 }

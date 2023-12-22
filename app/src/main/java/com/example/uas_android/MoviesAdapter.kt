@@ -1,5 +1,6 @@
 package com.example.uas_android
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,45 +10,41 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.uas_android.database.Movies
 
-class MoviesAdapter(private val onItemClick: (Movie) -> Unit) :
+class MoviesAdapter(val listmovie: List<Movies>) :
     RecyclerView.Adapter<MoviesAdapter.ViewHolder>() {
 
-    private var movies: List<Movie> = emptyList()
-
-    fun submitList(newList: List<Movie>) {
-        movies = newList
+    fun submitList(newList: List<Movies>) {
         notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item, parent, false)
-        return ViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val movie = movies[position]
-//        Toast.makeText(, movie.title, Toast.LENGTH_SHORT).show()
-        holder.bind(movie)
-        holder.itemView.setOnClickListener {
-            onItemClick(movie)
+        return ViewHolder(view).listen { position, _ ->
+            val item = listmovie[position]
+            onClick(parent, item)
         }
     }
 
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(listmovie[position])
+    }
+
     override fun getItemCount(): Int {
-        return movies.size
+        return listmovie.size
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // Bind your views here
         private val titleTextView: TextView = itemView.findViewById(R.id.texttitle)
         private val descriptionTextView: TextView = itemView.findViewById(R.id.Descview)
-        private val imageView: ImageView = itemView.findViewById(R.id.imageview_rev) // Change TextView to ImageView
+        private val imageView: ImageView = itemView.findViewById(R.id.imageview_rev)
 
-        fun bind(movie: Movie) {
+        fun bind(movie: Movies) {
             titleTextView.text = movie.title
-            descriptionTextView.text = movie.Description
+            descriptionTextView.text = movie.description
             // Bind other views as needed for the movie item
 
             Glide.with(itemView)
@@ -55,5 +52,17 @@ class MoviesAdapter(private val onItemClick: (Movie) -> Unit) :
                 .into(imageView)
         }
     }
+    private fun <T: RecyclerView.ViewHolder> T.listen(event: (position: Int, type: Int) -> Unit): T {
+        itemView.setOnClickListener {
+            event.invoke(adapterPosition, itemViewType)
+        }
+        return this
+    }
 
+    private fun onClick(parent: ViewGroup, item: Movies) {
+        val intent = Intent(parent.context.applicationContext, Edit_Movie_Activity::class.java)
+        intent.putExtra("id", item.id)
+        intent.putExtra("image", item.image)
+        parent.context.startActivity(intent)
+    }
 }
